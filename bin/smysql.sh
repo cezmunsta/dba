@@ -6,6 +6,7 @@ declare -ra ARGS=( ${@} )
 declare -ri ARGV=${#ARGS}
 declare -rA ALIASES=(
   [smysql]=mysql
+  [smysqld]=mysqld
   [smysqldump]=mysqldump
   [smydumper]=mydumper
   [smyisamchk]=myisamchk
