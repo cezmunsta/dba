@@ -1,20 +1,53 @@
 #!/bin/bash
 
-set -eu
+set -e
 
 declare -ra ARGS=( ${@} )
 declare -ri ARGV=${#ARGS}
 declare -rA ALIASES=(
   [smysql]=mysql
-  [sgrants]=pt-show-grants
-  [schecksum]=pt-table-checksum
-  [ssync]=pt-table-sync
-  [sdigest]=pt-query-digest
+  [smysqldump]=mysqldump
+  [smydumper]=mydumper
+  [smyisamchk]=myisamchk
+  [smyloader]=myloader
+  [smysqladmin]=mysqladmin
+  [smysqlanalyze]=mysqlanalyze
+  [smysqlcheck]=mysqlcheck
+  [smysqlimport]=mysqlimport
+  [smysqloptimize]=mysqloptimize
+  [smysqlpump]=mysqlpump
+  [smysqlrepair]=mysqlrepair
+  [spt-show-grants]=pt-show-grants
+  [spt-table-checksum]=pt-table-checksum
+  [spt-table-sync]=pt-table-sync
+  [spt-query-digest]=pt-query-digest
+  [spt-archiver]=pt-archiver
+  [spt-find]=pt-find  
+  [spt-config-diff]=pt-config-diff
+  [spt-deadlock-logger]=pt-deadlock-logger
+  [spt-duplicate-key-checker]=pt-duplicate-key-checker
+  [spt-fk-error-logger]=pt-fk-error-logger
+  [spt-heartbeat]=pt-heartbeat
+  [spt-index-usage]=pt-index-usage
+  [spt-kill]=pt-kill
+  [spt-mysql-summary]=pt-mysql-summary
+  [spt-online-schema-change]=pt-online-schema-change
+  [spt-osc]=pt-online-schema-change
+  [spt-slave-delay]=pt-slave-delay
+  [spt-slave-find ]=pt-slave-find
+  [spt-slave-restart]=pt-slave-restart
+  [spt-stalk]=pt-stalk
+  [spt-upgrade]=pt-upgrade
+  [spt-variable-advisor]=pt-variable-advisor
+  [spt-visual-explain]=pt-visual-explain
+
 )
 declare -r PROGNAME=$(basename ${0})
 declare -r SEC_MYCNF=$(test -f ${1:-undef} && echo $_ || echo 'my.gpg')
 declare -r SEC_FIFO=$(mktemp)
 declare -r PASSTHRU=${ARGS[@]:$(test -f ${1:-undef} && echo 1 || echo 0)}
+
+set -u
 
 function cleanup {
     test -e ${SEC_FIFO} && rm -f $_
@@ -50,11 +83,20 @@ function exec_cmd {
 }
 
 function usage {
-    cat <<EOS | fold -sw 70
+    local realfn=$(realpath ${0})
+    cat <<EOS | fold -sw 120
 USAGE: $(basename ${0}) enc_file.gpg [--arg=val]
+
+use a GPG-encrypted my.cnf (default: ${SEC_MYCNF})
 
 currently supports:
 ${ALIASES[@]}
+
+create a symlink to match the alias (real app prefixed with 's')
+e.g.
+
+sudo ln -s ${realfn} /usr/local/bin/smysql
+sudo ln -s ${realfn} /usr/local/bin/spt-show-grants
 
 EOS
 }
