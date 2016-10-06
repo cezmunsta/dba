@@ -2,8 +2,8 @@
 
 set -e
 
-declare -ra ARGS=( ${@} )
-declare -ri ARGV=${#ARGS}
+declare -ra ARGS=( "${@}" )
+declare -ri ARGV=${#ARGS[@]}
 declare -rA ALIASES=(
   [smysql]=mysql
   [smysqld]=mysqld
@@ -44,9 +44,13 @@ declare -rA ALIASES=(
 
 )
 declare -r PROGNAME=$(basename ${0})
-declare -r SEC_MYCNF=$(test -f ${1:-undef} && echo $_ || echo 'my.gpg')
+declare -r SEC_MYCNF=$(test -f ${1:-undef} && echo $_ || echo '.my.gpg')
 declare -r SEC_FIFO=$(mktemp)
-declare -r PASSTHRU=${ARGS[@]:$(test -f ${1:-undef} && echo 1 || echo 0)}
+declare -a PASSTHRU=( "${ARGS[@]}" )
+
+test ${ARGV} -gt 0 && \
+test -f "${ARGS[0]}" && \
+    PASSTHRU=( "${ARGS[@]:1}" )
 
 set -u
 
@@ -77,10 +81,7 @@ function check_cmd {
 
 function exec_cmd {
     local -r cmd=${1}
-    local -a args=( ${@} )
-    local -r passthru=${args[@]:1}
-
-    ${cmd} --defaults-file=${SEC_FIFO} ${passthru[@]}
+    ${cmd} --defaults-file=${SEC_FIFO} "${PASSTHRU[@]}"
 }
 
 function usage {
@@ -109,4 +110,4 @@ cmd=$(check_cmd ${PROGNAME})
 test $? -eq 0 || { echo ${ALIASES[${PROGNAME}]} is not available; exit 3; }
 
 cleanup && mkfifo ${SEC_FIFO} && decrypt &
-exec_cmd ${cmd} ${PASSTHRU[@]}
+exec_cmd ${cmd}
